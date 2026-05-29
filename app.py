@@ -505,7 +505,17 @@ def render_prediction() -> None:
             value="Ce film est vraiment excellent, les acteurs sont remarquables.",
             height=140,
         )
-        model_choice = st.radio("Modele", ["Baseline TF-IDF", "Transformer"], horizontal=True)
+        transformer_available = TRANSFORMER_MODEL_DIR.exists() and any(TRANSFORMER_MODEL_DIR.iterdir())
+        model_options = ["Baseline TF-IDF"]
+        if transformer_available:
+            model_options.append("Transformer")
+        model_choice = st.radio("Modele", model_options, horizontal=True)
+
+        if not transformer_available:
+            st.caption(
+                "La version en ligne utilise la baseline TF-IDF, plus legere et deja entrainee. "
+                "Le Transformer reste disponible dans le code pour une execution locale."
+            )
 
     with right:
         st.markdown(
@@ -531,10 +541,6 @@ def render_prediction() -> None:
             prediction = int(model.predict([cleaned])[0])
             score = float(model.predict_proba([cleaned])[0][prediction])
         else:
-            if not TRANSFORMER_MODEL_DIR.exists() or not any(TRANSFORMER_MODEL_DIR.iterdir()):
-                st.warning("Le Transformer n'est pas encore entraine. Lance `python src/train_transformer.py`.")
-                return
-
             from transformers import BertTokenizer, pipeline
 
             tokenizer = BertTokenizer.from_pretrained(TRANSFORMER_MODEL_DIR)

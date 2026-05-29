@@ -87,6 +87,12 @@ Installer les dependances :
 pip install -r requirements.txt
 ```
 
+Pour reproduire aussi l'entrainement Transformer localement :
+
+```bash
+pip install -r requirements-full.txt
+```
+
 ## 6. Exploration des donnees
 
 Pour explorer le dataset :
@@ -201,6 +207,8 @@ app.py
 6. Lancer le deploiement.
 
 Le fichier `runtime.txt` fixe une version Python stable pour le cloud, et le dossier `.streamlit/` contient la configuration visuelle de l'application.
+
+Le deploiement cloud utilise `requirements.txt`, volontairement plus leger pour eviter les erreurs de compilation de dependances lourdes. Le fichier `requirements-full.txt` contient les dependances supplementaires necessaires pour relancer l'entrainement Transformer en local.
 
 Vercel est surtout adapte aux applications JavaScript/Next.js. Pour une application Streamlit Python, Streamlit Community Cloud est plus simple et plus fiable.
 
