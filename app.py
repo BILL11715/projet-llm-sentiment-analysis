@@ -45,6 +45,11 @@ def inject_styles() -> None:
                 linear-gradient(120deg, rgba(37, 99, 235, 0.10), rgba(20, 184, 166, 0.09), rgba(219, 39, 119, 0.08)),
                 linear-gradient(180deg, #f8fbff 0%, #eef6f4 45%, #fff7ed 100%);
             color: var(--ink);
+            overflow-x: hidden;
+        }
+
+        html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+            overflow-x: hidden;
         }
 
         [data-testid="stHeader"] {
@@ -54,7 +59,8 @@ def inject_styles() -> None:
         .block-container {
             padding-top: 1.4rem;
             padding-bottom: 3rem;
-            max-width: 1180px;
+            max-width: 1120px;
+            overflow-x: hidden;
         }
 
         .hero {
@@ -116,12 +122,15 @@ def inject_styles() -> None:
         }
 
         .metric-card, .info-card, .prediction-card {
+            width: 100%;
+            box-sizing: border-box;
             border: 1px solid var(--line);
             border-radius: 14px;
             background: var(--panel);
             padding: 18px;
             box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
             animation: rise-in 650ms ease-out both;
+            overflow-wrap: anywhere;
         }
 
         .metric-card:nth-child(2), .info-card:nth-child(2) {
@@ -142,9 +151,16 @@ def inject_styles() -> None:
         .metric-value {
             margin-top: 8px;
             color: var(--ink);
-            font-size: 1.8rem;
+            font-size: clamp(1.45rem, 2.4vw, 1.8rem);
             line-height: 1;
             font-weight: 900;
+        }
+
+        .metric-detail {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 0.92rem;
+            line-height: 1.5;
         }
 
         .section-title {
@@ -157,7 +173,7 @@ def inject_styles() -> None:
 
         .step-row {
             display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-columns: repeat(5, minmax(130px, 1fr));
             gap: 10px;
             margin-top: 14px;
         }
@@ -168,6 +184,17 @@ def inject_styles() -> None:
             background: white;
             border: 1px solid var(--line);
             min-height: 102px;
+            overflow-wrap: anywhere;
+        }
+
+        [data-testid="stDataFrame"] {
+            max-width: 100%;
+        }
+
+        [data-testid="stVegaLiteChart"] {
+            max-width: 100%;
+            overflow: hidden;
+            border-radius: 12px;
         }
 
         .step-number {
@@ -255,11 +282,11 @@ def sentiment_name(label: int) -> str:
 def render_metric_card(label: str, value: str, detail: str = "") -> None:
     st.markdown(
         f"""
-        <div class="metric-card">
-            <div class="metric-label">{label}</div>
-            <div class="metric-value">{value}</div>
-            <div style="margin-top: 10px; color: var(--muted);">{detail}</div>
-        </div>
+            <div class="metric-card">
+                <div class="metric-label">{label}</div>
+                <div class="metric-value">{value}</div>
+                <div class="metric-detail">{detail}</div>
+            </div>
         """,
         unsafe_allow_html=True,
     )
@@ -281,7 +308,6 @@ def render_header() -> None:
         unsafe_allow_html=True,
     )
 
-    st.markdown('<div class="card-grid">', unsafe_allow_html=True)
     cols = st.columns(3)
     with cols[0]:
         render_metric_card("Dataset", "Allocine", "180 000 avis en francais")
@@ -289,7 +315,6 @@ def render_header() -> None:
         render_metric_card("Tache", "Sentiment", "Classification binaire")
     with cols[2]:
         render_metric_card("Sortie", "Positif / Negatif", "Prediction + score")
-    st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_dataset_section(df: pd.DataFrame) -> None:
@@ -423,13 +448,18 @@ def render_results() -> None:
         alt.Chart(long_df)
         .mark_bar(cornerRadiusTopLeft=6, cornerRadiusTopRight=6)
         .encode(
-            x=alt.X("metrique:N", title="Metrique"),
+            x=alt.X("metrique:N", title="Metrique", axis=alt.Axis(labelAngle=0)),
+            xOffset=alt.XOffset("modele:N"),
             y=alt.Y("score:Q", title="Score", scale=alt.Scale(domain=[0, 1])),
-            color=alt.Color("modele:N", scale=alt.Scale(range=["#2563eb", "#db2777"])),
-            column=alt.Column("modele:N", title=None),
+            color=alt.Color(
+                "modele:N",
+                title="Modele",
+                scale=alt.Scale(range=["#2563eb", "#db2777"]),
+                legend=alt.Legend(orient="bottom", columns=1),
+            ),
             tooltip=["modele", "metrique", alt.Tooltip("score:Q", format=".3f")],
         )
-        .properties(height=310)
+        .properties(height=330)
     )
     st.altair_chart(chart, use_container_width=True)
 
