@@ -14,7 +14,7 @@ SRC_DIR = ROOT_DIR / "src"
 sys.path.append(str(SRC_DIR))
 
 from config import BASELINE_MODEL_PATH, LABEL_NAMES, OUTPUTS_DIR, TEXT_COLUMN, TRANSFORMER_MODEL_DIR  # noqa: E402
-from data_utils import clean_text, dataset_to_dataframe, load_sentiment_dataset  # noqa: E402
+from data_utils import clean_text, load_sentiment_preview  # noqa: E402
 
 
 st.set_page_config(
@@ -264,11 +264,9 @@ def inject_styles() -> None:
 @st.cache_data(show_spinner=False)
 def load_preview_data(sample_size: int = 800) -> pd.DataFrame:
     try:
-        dataset = load_sentiment_dataset()
-        df = dataset_to_dataframe(dataset["train"])
-        sample = df.sample(n=min(sample_size, len(df)), random_state=42).copy()
-        sample["source"] = "hugging_face"
-        return sample
+        df = load_sentiment_preview(sample_size=sample_size)
+        df["source"] = "hugging_face"
+        return df
     except Exception:
         fallback_reviews = [
             ("Un film magnifique, touchant et tres bien joue.", 1),

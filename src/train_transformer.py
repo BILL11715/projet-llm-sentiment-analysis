@@ -1,6 +1,7 @@
 """Fine-tune a multilingual Transformer for French sentiment analysis."""
 
 import json
+import inspect
 
 import evaluate
 import numpy as np
@@ -77,31 +78,43 @@ def main() -> None:
         config=model_config,
     )
 
-    training_args = TrainingArguments(
-        output_dir=str(OUTPUTS_DIR / "transformer_training"),
-        eval_strategy="epoch",
-        save_strategy="epoch",
-        learning_rate=LEARNING_RATE,
-        per_device_train_batch_size=BATCH_SIZE,
-        per_device_eval_batch_size=BATCH_SIZE,
-        num_train_epochs=NUM_EPOCHS,
-        weight_decay=0.01,
-        load_best_model_at_end=False,
-        save_total_limit=1,
-        logging_steps=50,
-        report_to="none",
-        seed=42,
-    )
+    training_args_kwargs = {
+        "output_dir": str(OUTPUTS_DIR / "transformer_training"),
+        "save_strategy": "epoch",
+        "learning_rate": LEARNING_RATE,
+        "per_device_train_batch_size": BATCH_SIZE,
+        "per_device_eval_batch_size": BATCH_SIZE,
+        "num_train_epochs": NUM_EPOCHS,
+        "weight_decay": 0.01,
+        "load_best_model_at_end": False,
+        "save_total_limit": 1,
+        "logging_steps": 50,
+        "report_to": "none",
+        "seed": 42,
+    }
+    training_args_signature = inspect.signature(TrainingArguments.__init__).parameters
+    if "eval_strategy" in training_args_signature:
+        training_args_kwargs["eval_strategy"] = "epoch"
+    else:
+        training_args_kwargs["evaluation_strategy"] = "epoch"
 
-    trainer = Trainer(
-        model=model,
-        args=training_args,
-        train_dataset=train_dataset,
-        eval_dataset=eval_dataset,
-        processing_class=tokenizer,
-        data_collator=DataCollatorWithPadding(tokenizer=tokenizer),
-        compute_metrics=compute_metrics,
-    )
+    training_args = TrainingArguments(**training_args_kwargs)
+
+    trainer_kwargs = {
+        "model": model,
+        "args": training_args,
+        "train_dataset": train_dataset,
+        "eval_dataset": eval_dataset,
+        "data_collator": DataCollatorWithPadding(tokenizer=tokenizer),
+        "compute_metrics": compute_metrics,
+    }
+    trainer_signature = inspect.signature(Trainer.__init__).parameters
+    if "processing_class" in trainer_signature:
+        trainer_kwargs["processing_class"] = tokenizer
+    else:
+        trainer_kwargs["tokenizer"] = tokenizer
+
+    trainer = Trainer(**trainer_kwargs)
 
     print("Fine-tuning du Transformer...")
     trainer.train()

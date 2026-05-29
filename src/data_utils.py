@@ -18,8 +18,15 @@ def clean_text(text: str) -> str:
 
 def load_sentiment_dataset() -> DatasetDict:
     """Load the Allocine dataset from Hugging Face."""
-    dataset = load_dataset(DATASET_NAME)
+    dataset = load_dataset(DATASET_NAME, trust_remote_code=True)
     return dataset
+
+
+def load_sentiment_preview(sample_size: int = 800) -> pd.DataFrame:
+    """Load a small Allocine sample for the visual app."""
+    split = f"train[:{sample_size}]"
+    dataset = load_dataset(DATASET_NAME, split=split, trust_remote_code=True)
+    return dataset_to_dataframe(dataset)
 
 
 def dataset_to_dataframe(dataset: Dataset) -> pd.DataFrame:
@@ -45,4 +52,3 @@ def clean_dataset_split(dataset: Dataset) -> Dataset:
 def get_texts_and_labels(df: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
     """Extract model inputs and labels from a dataframe."""
     return df[TEXT_COLUMN], df[LABEL_COLUMN]
-
