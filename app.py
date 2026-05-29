@@ -263,9 +263,29 @@ def inject_styles() -> None:
 
 @st.cache_data(show_spinner=False)
 def load_preview_data(sample_size: int = 800) -> pd.DataFrame:
-    dataset = load_sentiment_dataset()
-    df = dataset_to_dataframe(dataset["train"])
-    return df.sample(n=min(sample_size, len(df)), random_state=42)
+    try:
+        dataset = load_sentiment_dataset()
+        df = dataset_to_dataframe(dataset["train"])
+        sample = df.sample(n=min(sample_size, len(df)), random_state=42).copy()
+        sample["source"] = "hugging_face"
+        return sample
+    except Exception:
+        fallback_reviews = [
+            ("Un film magnifique, touchant et tres bien joue.", 1),
+            ("Scenario faible, rythme lent et personnages peu convaincants.", 0),
+            ("J'ai adore l'ambiance, la musique et la fin.", 1),
+            ("Les dialogues sont plats et l'histoire manque d'originalite.", 0),
+            ("Une excellente surprise avec de belles emotions.", 1),
+            ("Je me suis ennuye du debut a la fin.", 0),
+            ("Les acteurs sont remarquables et la mise en scene est elegante.", 1),
+            ("Film decevant malgre quelques bonnes idees.", 0),
+            ("Tres belle realisation, captivante et sincere.", 1),
+            ("Trop long, previsible et sans vraie tension.", 0),
+        ]
+        rows = fallback_reviews * max(1, sample_size // len(fallback_reviews))
+        df = pd.DataFrame(rows[:sample_size], columns=[TEXT_COLUMN, "label"])
+        df["source"] = "fallback"
+        return df
 
 
 def load_json(path: Path) -> dict:
@@ -319,6 +339,12 @@ def render_header() -> None:
 
 def render_dataset_section(df: pd.DataFrame) -> None:
     st.markdown('<div class="section-title">1. Exploration des donnees</div>', unsafe_allow_html=True)
+
+    if "source" in df.columns and df["source"].iloc[0] == "fallback":
+        st.info(
+            "Mode demonstration : le dataset Hugging Face n'a pas pu etre charge sur le serveur, "
+            "donc l'interface utilise un petit echantillon local pour garder l'app consultable."
+        )
 
     label_counts = (
         df["label"]
@@ -556,11 +582,7 @@ def render_conclusion() -> None:
 def main() -> None:
     inject_styles()
     render_header()
-    try:
-        render_dataset_section(load_preview_data())
-    except Exception as exc:
-        st.error(f"Impossible de charger le dataset Hugging Face : {exc}")
-
+    render_dataset_section(load_preview_data())
     render_methodology()
     render_results()
     render_prediction()
