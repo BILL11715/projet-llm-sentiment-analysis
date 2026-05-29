@@ -5,6 +5,7 @@ __pycache__/
 
 models/*
 !models/.gitkeep
+!models/baseline_tfidf_logreg.joblib
 
 outputs/*
 !outputs/.gitkeep

@@ -182,6 +182,28 @@ Cette application permet de visualiser :
 - les resultats des modeles apres entrainement ;
 - une prediction interactive sur un nouvel avis.
 
+## 10.1 Deploiement en ligne
+
+L'application est prevue pour etre deployee facilement avec **Streamlit Community Cloud**.
+
+Etapes :
+
+1. Pousser ce projet sur un depot GitHub public.
+2. Aller sur `https://share.streamlit.io/`.
+3. Cliquer sur `New app`.
+4. Choisir le depot GitHub du projet.
+5. Indiquer le fichier principal :
+
+```text
+app.py
+```
+
+6. Lancer le deploiement.
+
+Le fichier `runtime.txt` fixe une version Python stable pour le cloud, et le dossier `.streamlit/` contient la configuration visuelle de l'application.
+
+Vercel est surtout adapte aux applications JavaScript/Next.js. Pour une application Streamlit Python, Streamlit Community Cloud est plus simple et plus fiable.
+
 ## 11. Resultats attendus
 
 Les resultats exacts dependent de la taille d'echantillon utilisee et de la machine. La baseline TF-IDF donne generalement deja de bons resultats sur cette tache, car les avis positifs et negatifs contiennent souvent des indices lexicaux explicites.
